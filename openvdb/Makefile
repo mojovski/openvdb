@@ -150,7 +150,7 @@ GLFW_MAJOR_VERSION := 3
 
 # The version of Python for which to build the OpenVDB module
 # (leave blank if Python is unavailable)
-PYTHON_VERSION := 2.6
+#PYTHON_VERSION := 2.6
 # The directory containing Python.h
 PYTHON_INCL_DIR := $(HFS)/python/include/python$(PYTHON_VERSION)
 # The directory containing pyconfig.h
@@ -730,7 +730,7 @@ vdb_render: $(LIBOPENVDB) cmd/openvdb_render/main.cc
 	    -Wl,-rpath,$(EXR_LIB_DIR) -L$(EXR_LIB_DIR) $(EXR_LIB) \
 	    -Wl,-rpath,$(ILMBASE_LIB_DIR) -L$(ILMBASE_LIB_DIR) $(ILMBASE_LIB) \
 	    $(LIBOPENVDB_RPATH) -L$(CURDIR) $(LIBOPENVDB) \
-	    $(LIBS_RPATH) $(CONCURRENT_MALLOC_LIB)
+	    $(LIBS_RPATH) $(CONCURRENT_MALLOC_LIB) $(TBB_LIB) $(BOOST_LIB) $(EXR_LIB) $(HALF_LIB)
 
 # Create an openvdb_viewer/ symlink to the viewer/ subdirectory,
 # to mirror the DWA directory structure.
