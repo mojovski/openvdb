@@ -1,0 +1,4 @@
+set(BLOSC_FOUND)
+set(BLOSC_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/../../c-blosc-1.6.0/blosc")
+set(BLOSC_blosc_LIBRARY "blosc")
+set(BLOSC_LIBRARY_DIRS "${BLOSC_INCLUDE_DIR}")
