@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -40,6 +40,7 @@
 
 #include <openvdb/tools/LevelSetUtil.h>
 #include <openvdb/tools/MeshToVolume.h>
+#include <openvdb/tools/Morphology.h>
 #include <openvdb/tools/VolumeToMesh.h>
 #include <openvdb/tools/Prune.h>
 #include <openvdb/tree/ValueAccessor.h>
@@ -108,8 +109,6 @@ public:
     // should be drawn dashed rather than solid.
     virtual int isRefInput(unsigned idx) const { return (idx == 1); }
 
-    void checkActivePart(float time);
-
 protected:
     virtual OP_ERROR cookMySop(OP_Context&);
     virtual bool updateParmsFlags();
@@ -132,39 +131,6 @@ private:
         hvdb::Interrupter& boss,
         const fpreal time);
 };
-
-
-////////////////////////////////////////
-
-
-namespace {
-
-// Callback to check partition limit
-int
-checkActivePartCB(void* data, int /*idx*/, float time, const PRM_Template*)
-{
-    SOP_OpenVDB_Convert* sop = static_cast<SOP_OpenVDB_Convert*>(data);
-    if (sop == NULL) return 0;
-    sop->checkActivePart(time);
-    return 1;
-}
-
-} // namespace
-
-
-void
-SOP_OpenVDB_Convert::checkActivePart(float time)
-{
-    const int partitions = evalInt("automaticpartitions", 0, time);
-    const int activepart = evalInt("activepart", 0, time);
-
-    if (activepart > partitions) {
-        setInt("activepart", 0, time, partitions);
-    }
-}
-
-
-////////////////////////////////////////
 
 
 // Build UI and register this operator.
@@ -245,18 +211,6 @@ newSopOperator(OP_OperatorTable* table)
 
     parms.add(hutil::ParmFactory(PRM_TOGGLE, "computenormals", "Compute Vertex Normals")
         .setHelpText("Compute edge-preserving vertex normals"));
-
-    parms.add(hutil::ParmFactory(PRM_INT_J, "automaticpartitions", "Automatic Partitions")
-        .setRange(PRM_RANGE_RESTRICTED, 1, PRM_RANGE_UI, 20)
-        .setHelpText("Subdivide volume and mesh into disjoint parts")
-        .setDefault(PRMoneDefaults)
-        .setCallbackFunc(&checkActivePartCB));
-
-    parms.add(hutil::ParmFactory(PRM_INT_J, "activepart", "Active Partition")
-        .setRange(PRM_RANGE_RESTRICTED, 1, PRM_RANGE_UI, 20)
-        .setHelpText("Specific partition to mesh")
-        .setDefault(PRMzeroDefaults)
-        .setCallbackFunc(&checkActivePartCB));
 
 
     //////////
@@ -373,6 +327,8 @@ newSopOperator(OP_OperatorTable* table)
     hutil::ParmList obsoleteParms;
     obsoleteParms.add(hutil::ParmFactory(PRM_SEPARATOR,"sep1", ""));
     obsoleteParms.add(hutil::ParmFactory(PRM_TOGGLE, "smoothseams", "Smooth Seams"));
+    obsoleteParms.add(hutil::ParmFactory(PRM_INT_J, "automaticpartitions", ""));
+    obsoleteParms.add(hutil::ParmFactory(PRM_INT_J, "activepart", ""));
 
     // Register this operator.
     hvdb::OpenVDBOpFactory("OpenVDB Convert",
@@ -864,9 +820,6 @@ SOP_OpenVDB_Convert::updateParmsFlags()
     const bool adaptivityfield = bool(evalInt("adaptivityfield", 0, 0));
     changed |= enableParm("adaptivityfieldname", toPoly && maskexists && adaptivityfield);
 
-    const bool partition = evalInt("automaticpartitions", 0, 0) > 1;
-    changed |= enableParm("activepart", partition);
-
 #if HAVE_SPLITTING
     changed |= setVisibleState("splitdisjointvolumes", toVolume);
 #endif
@@ -875,8 +828,6 @@ SOP_OpenVDB_Convert::updateParmsFlags()
     changed |= setVisibleState("isoValue", toPoly);
     changed |= setVisibleState("fogisovalue", toOpenVDB);
     changed |= setVisibleState("computenormals", toPoly);
-    changed |= setVisibleState("automaticpartitions", toPoly);
-    changed |= setVisibleState("activepart", toPoly);
 
     changed |= setVisibleState("internaladaptivity", toPoly);
     changed |= setVisibleState("transferattributes", toPoly);
@@ -1170,9 +1121,6 @@ SOP_OpenVDB_Convert::convertToPoly(
 
     openvdb::tools::VolumeToMesh mesher(iso, adaptivity);
 
-    // Slicing options
-    mesher.partition(evalInt("automaticpartitions", 0, time), evalInt("activepart", 0, time) - 1);
-
     // Check mask input
     const GU_Detail* maskGeo = inputGeo(2);
     if (maskGeo) {
@@ -1180,9 +1128,13 @@ SOP_OpenVDB_Convert::convertToPoly(
         if (evalInt("surfacemask", 0, time)) {
             UT_String maskStr;
             evalString(maskStr, "surfacemaskname", 0, time);
-
+#if (UT_MAJOR_VERSION_INT >= 15)
+            const GA_PrimitiveGroup * maskGroup =
+                parsePrimitiveGroups(maskStr.buffer(), GroupCreator(maskGeo));
+#else
             const GA_PrimitiveGroup * maskGroup =
                 parsePrimitiveGroups(maskStr.buffer(), const_cast<GU_Detail*>(maskGeo));
+#endif
 
             if (!maskGroup && maskStr.length() > 0) {
                 addWarning(SOP_MESSAGE, "Surface mask not found.");
@@ -1344,7 +1296,12 @@ SOP_OpenVDB_Convert::cookMySop(OP_Context& context)
 
         UT_String group_str;
         evalString(group_str, "group", 0, t);
+
+#if (UT_MAJOR_VERSION_INT >= 15)
+        GA_PrimitiveGroup* group = parsePrimitiveGroupsCopy(group_str, GroupCreator(gdp));
+#else
         GA_PrimitiveGroup* group = parsePrimitiveGroupsCopy(group_str, gdp);
+#endif
 
         hvdb::Interrupter interrupter("Convert");
 
@@ -1415,6 +1372,6 @@ SOP_OpenVDB_Convert::cookMySop(OP_Context& context)
     return error();
 }
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -39,7 +39,6 @@
 
 // Boost.Interprocess uses a header-only portion of Boost.DateTime
 #define BOOST_DATE_TIME_NO_LIB
-#include <boost/detail/sp_typeinfo.hpp>
 #include <boost/interprocess/file_mapping.hpp>
 #include <boost/interprocess/mapped_region.hpp>
 #include <boost/iostreams/device/array.hpp>
@@ -321,7 +320,7 @@ template<typename T>
 inline bool
 writeAsType(std::ostream& os, const boost::any& val)
 {
-    if (val.type() == BOOST_SP_TYPEID(T)) {
+    if (val.type() == typeid(T)) {
         os << boost::any_cast<T>(val);
         return true;
     }
@@ -509,7 +508,7 @@ MappedFile::clearNotifier()
 std::string
 getErrorString(int errorNum)
 {
-#if DWA_BOOST_VERSION >= 1043000
+#if DWA_BOOST_VERSION >= 1044000
     return boost::system::error_code(errorNum, boost::system::generic_category()).message();
 #else
     return boost::system::error_code(errorNum, boost::system::get_generic_category()).message();
@@ -1372,6 +1371,6 @@ Archive::writeGridInstance(GridDescriptor& gd, GridBase::ConstPtr grid,
 } // namespace OPENVDB_VERSION_NAME
 } // namespace openvdb
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

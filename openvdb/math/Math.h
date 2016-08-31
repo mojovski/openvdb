@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -44,6 +44,7 @@
 #include <string>
 #include <boost/numeric/conversion/conversion_traits.hpp>
 #include <boost/math/special_functions/cbrt.hpp>
+#include <boost/math/special_functions/fpclassify.hpp> // boost::math::isfinite
 #include <boost/random/mersenne_twister.hpp> // for boost::random::mt19937
 #include <boost/random/uniform_01.hpp>
 #include <boost/random/uniform_int.hpp>
@@ -244,7 +245,7 @@ template<typename Type>
 inline Type
 Clamp(Type x, Type min, Type max)
 {
-    assert(min<max);
+    assert( !(min>max) );
     return x > min ? x < max ? x : max : min;
 }
 
@@ -335,7 +336,7 @@ inline bool
 isApproxZero(const Type& x)
 {
     const Type tolerance = Type(zeroVal<Type>() + Tolerance<Type>::value());
-    return x < tolerance && x > -tolerance;
+    return !(x > tolerance) && !(x < -tolerance);
 }
 
 /// Return @c true if @a x is equal to zero to within the given tolerance.
@@ -343,7 +344,7 @@ template<typename Type>
 inline bool
 isApproxZero(const Type& x, const Type& tolerance)
 {
-    return x < tolerance && x > -tolerance;
+    return !(x > tolerance) && !(x < -tolerance);
 }
 
 
@@ -354,6 +355,12 @@ isNegative(const Type& x) { return x < zeroVal<Type>(); }
 
 /// Return @c false, since @c bool values are never less than zero.
 template<> inline bool isNegative<bool>(const bool&) { return false; }
+
+
+/// Return @c true if @a x is finite.
+template<typename Type>
+inline bool
+isFinite(const Type& x) { return boost::math::isfinite(x); }
 
 
 /// @brief Return @c true if @a a is equal to @a b to within
@@ -668,6 +675,24 @@ Min(const Type& a, const Type& b, const Type& c, const Type& d,
 template<typename Type>
 inline Type Exp(const Type& x) { return std::exp(x); }
 
+// ============> Sin <==================
+
+//@{
+/// Return @f$ sin(x) @f$.
+inline float Sin(const float& x) { return sinf(x); }
+
+inline double Sin(const double& x) { return sin(x); }
+//@}
+
+// ============> Cos <==================
+
+//@{
+/// Return @f$ cos(x) @f$.
+inline float Cos(const float& x) { return cosf(x); }
+
+inline double Cos(const double& x) { return cos(x); }
+//@}
+
 
 ////////////////////////////////////////
 
@@ -800,7 +825,7 @@ inline int Ceil(long double x) { return int(RoundUp(x)); }
 //@}
 
 
-/// Return @a x if it is greater in magnitude than @a delta.  Otherwise, return zero.
+/// Return @a x if it is greater or equal in magnitude than @a delta.  Otherwise, return zero.
 template<typename Type>
 inline Type Chop(Type x, Type delta) { return (Abs(x) < delta ? zeroVal<Type>() : x); }
 
@@ -900,6 +925,6 @@ MaxIndex(const Vec3T& v)
 
 #endif // OPENVDB_MATH_MATH_HAS_BEEN_INCLUDED
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

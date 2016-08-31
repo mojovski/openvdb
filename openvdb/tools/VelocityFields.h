@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -73,7 +73,16 @@ public:
     typedef typename VectorType::ValueType   ValueType;
     BOOST_STATIC_ASSERT(boost::is_floating_point<ValueType>::value);
 
-    DiscreteField(const VelGridT &vel): mAccessor(vel.tree()), mTransform(&vel.transform())
+    DiscreteField(const VelGridT &vel)
+        : mAccessor(vel.tree())
+        , mTransform(&vel.transform())
+    {
+    }
+
+    /// @brief Copy constructor
+    DiscreteField(const DiscreteField& other)
+        : mAccessor(other.mAccessor.tree())
+        , mTransform(other.mTransform)
     {
     }
 
@@ -83,13 +92,19 @@ public:
     const math::Transform& transform() const { return *mTransform; }
 
     /// @return the interpolated velocity at the world space position xyz
-    inline VectorType operator() (const Vec3d& xyz, ValueType) const
+    ///
+    /// @warning Not threadsafe since it uses a ValueAccessor! So use
+    /// one instance per thread (which is fine since its lightweight).
+    inline VectorType operator() (const Vec3d& xyz, ValueType/*dummy time*/) const
     {
         return Interpolator::sample(mAccessor, mTransform->worldToIndex(xyz));
     }
 
     /// @return the velocity at the coordinate space position ijk
-    inline VectorType operator() (const Coord& ijk, ValueType) const
+    ///
+    /// @warning Not threadsafe since it uses a ValueAccessor! So use
+    /// one instance per thread (which is fine since its lightweight).
+    inline VectorType operator() (const Coord& ijk, ValueType/*dummy time*/) const
     {
         return mAccessor.getValue(ijk);
     }
@@ -139,16 +154,16 @@ inline math::Vec3<ScalarT>
 EnrightField<ScalarT>::operator() (const Vec3d& xyz, ValueType time) const
 {
     const ScalarT pi = boost::math::constants::pi<ScalarT>();
-    const ScalarT phase = pi / ScalarT(3.0);
+    const ScalarT phase = pi / ScalarT(3);
     const ScalarT Px =  pi * ScalarT(xyz[0]), Py = pi * ScalarT(xyz[1]), Pz = pi * ScalarT(xyz[2]);
-    const ScalarT tr =  cos(ScalarT(time) * phase);
-    const ScalarT a  =  sin(ScalarT(2.0)*Py);
-    const ScalarT b  = -sin(ScalarT(2.0)*Px);
-    const ScalarT c  =  sin(ScalarT(2.0)*Pz);
+    const ScalarT tr =  math::Cos(ScalarT(time) * phase);
+    const ScalarT a  =  math::Sin(ScalarT(2)*Py);
+    const ScalarT b  = -math::Sin(ScalarT(2)*Px);
+    const ScalarT c  =  math::Sin(ScalarT(2)*Pz);
     return math::Vec3<ScalarT>(
-        tr * ( ScalarT(2) * math::Pow2(sin(Px)) * a * c ),
-        tr * ( b * math::Pow2(sin(Py)) * c ),
-        tr * ( b * a * math::Pow2(sin(Pz)) ));
+                               tr * ( ScalarT(2) * math::Pow2(math::Sin(Px)) * a * c ),
+                               tr * ( b * math::Pow2(math::Sin(Py)) * c ),
+                               tr * ( b * a * math::Pow2(math::Sin(Pz)) ));
 }
 
 
@@ -180,7 +195,11 @@ public:
     }
     /// @brief Samples the velocity at world position onto result. Supports both
     /// staggered (i.e. MAC) and collocated velocity grids.
+    ///
     /// @return @c true if any one of the sampled values is active.
+    ///
+    /// @warning Not threadsafe since it uses a ValueAccessor! So use
+    /// one instance per thread (which is fine since its lightweight).
     template <typename LocationType>
     inline bool sample(const LocationType& world, ValueType& result) const
     {
@@ -191,6 +210,9 @@ public:
 
     /// @brief Samples the velocity at world position onto result. Supports both
     /// staggered (i.e. MAC) and co-located velocity grids.
+    ///
+    /// @warning Not threadsafe since it uses a ValueAccessor! So use
+    /// one instance per thread (which is fine since its lightweight).
     template <typename LocationType>
     inline ValueType sample(const LocationType& world) const
     {
@@ -232,7 +254,7 @@ public:
     template<size_t OrderRK, typename LocationType>
     inline void rungeKutta(const ElementType dt, LocationType& world) const
     {
-        BOOST_STATIC_ASSERT(OrderRK < 5);
+        BOOST_STATIC_ASSERT(OrderRK <= 4);
         VecType P(static_cast<ElementType>(world[0]),
                   static_cast<ElementType>(world[1]),
                   static_cast<ElementType>(world[2]));
@@ -278,6 +300,6 @@ private:
 
 #endif // OPENVDB_TOOLS_VELOCITY_FIELDS_HAS_BEEN_INCLUDED
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

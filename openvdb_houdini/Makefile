@@ -1,4 +1,4 @@
-# Copyright (c) 2012-2015 DreamWorks Animation LLC
+# Copyright (c) 2012-2016 DreamWorks Animation LLC
 #
 # All rights reserved. This software is distributed under the
 # Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -153,6 +153,8 @@ endif
 INCLDIRS := -I . -I .. -isystem $(BOOST_INCL_DIR) -isystem $(ILMBASE_INCL_DIR) -isystem $(TBB_INCL_DIR)
 HCUSTOM_INCLDIRS := $(subst isystem,I,$(INCLDIRS))
 
+CXXFLAGS += -std=c++0x
+
 CXXFLAGS += -pthread $(OPTIMIZE) $(INCLDIRS) -DIGNORE_HDK_DEPRECATIONS
 ifeq (2,$(strip $(abi)))
     CXXFLAGS += -DOPENVDB_2_ABI_COMPATIBLE
@@ -220,7 +222,7 @@ HOUDINI_SOP_SCRIPT_NAMES := \
     houdini/DW_OpenVDBRasterizePoints.cmd \
 #
 HOUDINI_SOP_SRC_NAMES := \
-    houdini/SOP_OpenVDB_Advect_Level_Set.cc \
+    houdini/SOP_OpenVDB_Advect.cc \
     houdini/SOP_OpenVDB_Advect_Points.cc \
     houdini/SOP_OpenVDB_Analysis.cc \
     houdini/SOP_OpenVDB_Clip.cc \
@@ -234,6 +236,7 @@ HOUDINI_SOP_SRC_NAMES := \
     houdini/SOP_OpenVDB_Fracture.cc \
     houdini/SOP_OpenVDB_From_Particles.cc \
     houdini/SOP_OpenVDB_From_Polygons.cc \
+    houdini/SOP_OpenVDB_LOD.cc \
     houdini/SOP_OpenVDB_Metadata.cc \
     houdini/SOP_OpenVDB_Morph_Level_Set.cc \
     houdini/SOP_OpenVDB_Noise.cc \
@@ -244,13 +247,16 @@ HOUDINI_SOP_SRC_NAMES := \
     houdini/SOP_OpenVDB_Ray.cc \
     houdini/SOP_OpenVDB_Read.cc \
     houdini/SOP_OpenVDB_Rebuild_Level_Set.cc \
+    houdini/SOP_OpenVDB_Remap.cc \
     houdini/SOP_OpenVDB_Remove_Divergence.cc \
     houdini/SOP_OpenVDB_Resample.cc \
     houdini/SOP_OpenVDB_Sample_Points.cc \
     houdini/SOP_OpenVDB_Sort_Points.cc \
     houdini/SOP_OpenVDB_Scatter.cc \
+    houdini/SOP_OpenVDB_Segment.cc \
     houdini/SOP_OpenVDB_To_Polygons.cc \
     houdini/SOP_OpenVDB_To_Spheres.cc \
+    houdini/SOP_OpenVDB_Topology_To_Level_Set.cc \
     houdini/SOP_OpenVDB_Transform.cc \
     houdini/SOP_OpenVDB_Vector_Merge.cc \
     houdini/SOP_OpenVDB_Vector_Split.cc \
@@ -495,6 +501,6 @@ ifneq (,$(strip $(wildcard $(DEPEND))))
     include $(DEPEND)
 endif
 
-# Copyright (c) 2012-2015 DreamWorks Animation LLC
+# Copyright (c) 2012-2016 DreamWorks Animation LLC
 # All rights reserved. This software is distributed under the
 # Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

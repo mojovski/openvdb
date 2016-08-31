@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -315,6 +315,8 @@ populateIndexTree(VIndexTreeType& result)
     // Linearize the tree.
     LeafMgrT leafManager(result);
     const size_t leafCount = leafManager.leafCount();
+
+    if(leafCount == 0) return;
 
     // Count the number of active voxels in each leaf node.
     boost::scoped_array<VIndex> perLeafCount(new VIndex[leafCount]);
@@ -745,7 +747,7 @@ solveWithBoundaryConditionsAndPreconditioner(const TreeType& inTree,
 
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -51,16 +51,16 @@ CPPUNIT_TEST_SUITE_REGISTRATION(TestPointPartitioner);
 namespace {
 
 struct PointList {
-    typedef openvdb::Vec3s value_type;
+    typedef openvdb::Vec3s PosType;
 
-    PointList(const std::vector<value_type>& points) : mPoints(&points) {}
+    PointList(const std::vector<PosType>& points) : mPoints(&points) {}
 
     size_t size() const { return mPoints->size(); }
 
-    void getPos(size_t n, value_type& xyz) const { xyz = (*mPoints)[n]; }
+    void getPos(size_t n, PosType& xyz) const { xyz = (*mPoints)[n]; }
 
 protected:
-    std::vector<value_type> const * const mPoints;
+    std::vector<PosType> const * const mPoints;
 }; // PointList
 
 } // namespace
@@ -90,6 +90,9 @@ TestPointPartitioner::testPartitioner()
             PointPartitioner::create(pointList, *transform);
 
     CPPUNIT_ASSERT(!partitioner->empty());
+
+    // The default interpretation should be cell-centered.
+    CPPUNIT_ASSERT(partitioner->usingCellCenteredTransform());
 
     const size_t expectedPageCount = pointCount / (1u << PointPartitioner::LOG2DIM);
 
@@ -121,6 +124,6 @@ TestPointPartitioner::testPartitioner()
 }
 
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )

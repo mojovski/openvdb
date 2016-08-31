@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////////
 //
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 //
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
@@ -64,7 +64,7 @@ private:
     union { ChildT* child; ValueT value; } mUnion;
 
 public:
-    NodeUnionImpl() { setChild(NULL); }
+    NodeUnionImpl() { mUnion.child = NULL; }
 
     ChildT* getChild() const { return mUnion.child; }
     const ValueT& getValue() const { return mUnion.value; }
@@ -84,21 +84,27 @@ private:
     bool mHasChild;
 
 public:
-    NodeUnionImpl(): mHasChild(true) { setChild(NULL); }
-    NodeUnionImpl(const NodeUnionImpl& other)
+    NodeUnionImpl() : mHasChild(true) { this->setChild(NULL); }
+    NodeUnionImpl(const NodeUnionImpl& other) : mHasChild(true)
     {
-        if (other.mHasChild) setChild(other.getChild());
-        else setValue(other.getValue());
+        if (other.mHasChild) {
+            this->setChild(other.getChild());
+        } else {
+            this->setValue(other.getValue());
+        }
     }
     NodeUnionImpl& operator=(const NodeUnionImpl& other)
     {
-        if (other.mHasChild) setChild(other.getChild());
-        else setValue(other.getValue());
+        if (other.mHasChild) {
+            this->setChild(other.getChild());
+        } else {
+            this->setValue(other.getValue());
+        }
+        return *this;
     }
-    ~NodeUnionImpl() { setChild(NULL); }
+    ~NodeUnionImpl() { this->setChild(NULL); }
 
-    ChildT* getChild() const
-        { return mHasChild ? mUnion.child : NULL; }
+    ChildT* getChild() const { return mHasChild ? mUnion.child : NULL; }
     void setChild(ChildT* child)
     {
         if (!mHasChild) delete mUnion.value;
@@ -110,8 +116,8 @@ public:
     ValueT& getValue() { return *mUnion.value; }
     void setValue(const ValueT& val)
     {
-        /// @todo To minimize storage across nodes, intern and reuse
-        /// common values, using, e.g., boost::flyweight.
+        /// @todo To minimize storage across nodes, intern and
+        /// reuse common values, using, e.g., boost::flyweight.
         if (!mHasChild) delete mUnion.value;
         mUnion.value = new ValueT(val);
         mHasChild = false;
@@ -132,6 +138,6 @@ struct NodeUnion: public NodeUnionImpl<
 
 #endif // OPENVDB_TREE_NODEUNION_HAS_BEEN_INCLUDED
 
-// Copyright (c) 2012-2015 DreamWorks Animation LLC
+// Copyright (c) 2012-2016 DreamWorks Animation LLC
 // All rights reserved. This software is distributed under the
 // Mozilla Public License 2.0 ( http://www.mozilla.org/MPL/2.0/ )
