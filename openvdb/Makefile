@@ -150,7 +150,8 @@ GLFW_MAJOR_VERSION := 3
 
 # The version of Python for which to build the OpenVDB module
 # (leave blank if Python is unavailable)
-PYTHON_VERSION := 2.6
+PYTHON_VERSION := 
+#2.6
 # The directory containing Python.h
 PYTHON_INCL_DIR := $(HFS)/python/include/python$(PYTHON_VERSION)
 # The directory containing pyconfig.h

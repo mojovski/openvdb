@@ -92,7 +92,6 @@ SET ( OPENVDB_LIBRARY_SOURCE_FILES
   io/Queue.cc
   io/Stream.cc
   io/TempFile.cc
-  #math/Hermite.cc
   math/Maps.cc
   math/Proximity.cc
   math/QuantizedUnitVec.cc
@@ -103,11 +102,6 @@ SET ( OPENVDB_LIBRARY_SOURCE_FILES
   Platform.cc
   util/Formats.cc
   util/Util.cc
-  viewer/Camera.cc
-  viewer/ClipBox.cc
-  viewer/Font.cc
-  #viewer/RenderModules.cc
-  #viewer/Viewer.cc
   )
 
  SET_SOURCE_FILES_PROPERTIES ( ${OPENVDB_LIBRARY_SOURCE_FILES}
