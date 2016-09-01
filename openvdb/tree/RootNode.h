@@ -158,7 +158,7 @@ public:
 
     ~RootNode() { this->clear(); }
 
-private:
+protected:
     struct Tile {
         Tile(): value(zeroVal<ValueType>()), active(false) {}
         Tile(const ValueType& v, bool b): value(v), active(b) {}
@@ -911,7 +911,7 @@ public:
     template<typename OtherRootNodeType, typename VisitorOp>
     void visit2(OtherRootNodeType& other, VisitorOp&) const;
 
-private:
+protected:
     /// During topology-only construction, access is needed
     /// to protected/private members of other template instances.
     template<typename> friend class RootNode;
